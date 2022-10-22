@@ -8,9 +8,15 @@ import { GeoFraudDetectorService } from "./service/geo.fraud.detector.service";
 import { GeoUpdateService } from "./service/geo.update.service";
 import { TransactionService } from "./service/transaction.service";
 import { TransactionEntryEntity } from "./database/entitiy/transaction.entry.entity";
+import { BusinessSiteController } from "./controller/business-site/business-site.controller";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, 'assets'),
+    }),
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: path.join(process.cwd(), "database", "database.sqlite"),
@@ -24,7 +30,8 @@ import { TransactionEntryEntity } from "./database/entitiy/transaction.entry.ent
   ],
   controllers: [
     GeoUpdateReceiverController, 
-    TransactionValidatorController
+    TransactionValidatorController,
+    BusinessSiteController
   ],
   providers: [
     GeoFraudDetectorService,

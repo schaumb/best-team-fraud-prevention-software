@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Best Business - NotLiveJasmin.com</title>
+  <!-- CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+        crossorigin="anonymous">
+  <style>
+      body, html {
+          width: 100vw;
+          height: 100vh;
+          margin: 0;
+          padding: 0;
+      }
+  </style>
+  <script>
+    // Initialize and add the map
+    function initMap() {
+      console.log("Init map called...");
+      // The location of Uluru
+      const uluru = { lat: -25.344, lng: 131.031 };
+      // The map, centered at Uluru
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 4,
+        center: uluru,
+      });
+      // The marker, positioned at Uluru
+      const marker = new google.maps.Marker({
+        position: uluru,
+        map: map,
+      });
+    }
+
+    window.initMap = initMap;
+  </script>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="col-md-3">
+    Form container
+  </div>
+  <div class="col-md-2">
+
+  </div>
+  <div class="col-md-7">
+    <div id="map"></div>
+  </div>
+</div>
+
+
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCUPJqj6xJ1d9Zk_rqwbBkOlLH--6i27cU&callback=initMap&v=weekly"
+  defer
+></script>
+</body>
+</html>
