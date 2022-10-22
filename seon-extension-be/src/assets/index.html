@@ -17,29 +17,173 @@
           margin: 0;
           padding: 0;
       }
+
+      body > div,
+      body > div > div,
+      body > div > div > div {
+          height: 100%;
+      }
+
+      label {
+          display: block;
+      }
+
+      input {
+          width: 100%;
+      }
+
+      .positionContainer input:nth-child(1) {
+          margin-left: 8px;
+      }
+
+      .positionContainer input:nth-child(2) {
+          margin-right: 8px;
+      }
+
+      button {
+          width: 100%;
+          margin-top: 16px;
+      }
+
       #map {
-          height: 400px;
+          height: 100%;
           /* The height is 400 pixels */
           width: 100%;
           /* The width is the width of the web page */
+      }
+      .test-case-container{
+          padding: 8px;
+          box-sizing: border-box;
+      }
+      .test-case-container > div{
+          margin-top: 16px;
+          margin-bottom: 16px;
+          cursor: pointer;
+
+          user-select: none; /* supported by Chrome and Opera */
+          -webkit-user-select: none; /* Safari */
+          -khtml-user-select: none; /* Konqueror HTML */
+          -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+      }
+
+      .test-case-container > div.selected{
+          background-color: #f4f4f4;
+      }
+      .test-case-container > div span {
+          padding: 0;
+          border: none !important;
+          cursor: default !important;
+      }
+
+      .gm-ui-hover-effect {
+          display: none !important;
       }
   </style>
   <script>
     // Initialize and add the map
     function initMap() {
-      console.log("Init map called...");
-      // The location of Uluru
-      // const uluru = { lat: -25.344, lng: 131.031 };
-      // The map, centered at Uluru
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -34.397, lng: 150.644 },
-        zoom: 8,
-      });
-      // // The marker, positioned at Uluru
-      // const marker = new google.maps.Marker({
-      //   position: uluru,
-      //   map: map,
+      // console.log("Init map called...");
+      // // The location of Uluru
+      // // const uluru = { lat: -25.344, lng: 131.031 };
+      // // The map, centered at Uluru
+      // const map = new google.maps.Map(document.getElementById("map"), {
+      //   zoom: 12,
+      //   center: { lat: 34.84555, lng: -111.8035 }
       // });
+      // // Set LatLng and title text for the markers. The first marker (Boynton Pass)
+      // // receives the initial focus when tab is pressed. Use arrow keys to
+      // // move between markers; press tab again to cycle through the map controls.
+      // const tourStops = [
+      //   [{ lat: 34.8791806, lng: -111.8265049 }, "Boynton Pass"],
+      //   [{ lat: 34.8559195, lng: -111.7988186 }, "Airport Mesa"],
+      //   [{ lat: 34.832149, lng: -111.7695277 }, "Chapel of the Holy Cross"],
+      //   [{ lat: 34.823736, lng: -111.8001857 }, "Red Rock Crossing"],
+      //   [{ lat: 34.800326, lng: -111.7665047 }, "Bell Rock"]
+      // ];
+      // // Create an info window to share between markers.
+      //
+      // // Create the markers.
+      // tourStops.forEach(([position, title], i) => {
+      //   const infoWindow = new google.maps.InfoWindow();
+      //   const marker = new google.maps.Marker({
+      //     position,
+      //     map,
+      //     title: `${i + 1}. ${title}`,
+      //     label: `${i + 1}`,
+      //     optimized: false
+      //   });
+      //   infoWindow.setContent(marker.getTitle());
+      //   infoWindow.open(marker.getMap(), marker);
+      // });
+
+
+      const center = new google.maps.LatLng(-33.712451, 150.311823);
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 15,
+        center: { lat: 37.772, lng: -122.214 },
+        zoomControl: false,
+        mapTypeControl: false,
+        scaleControl: false,
+        streetViewControl: false,
+        rotateControl: false,
+        fullscreenControl: false,
+        disableDefaultUI: true,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      });
+      map.setOptions({
+        draggable: false,
+        styles: [
+          {
+            "featureType": "poi",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          }
+        ]
+      });
+
+      const flightPlanCoordinates = [
+        { lat: 37.772, lng: -122.214 },
+        { lat: 21.291, lng: -157.821 },
+        { lat: -18.142, lng: 178.431 },
+        { lat: -27.467, lng: 153.027 }
+      ];
+      const flightPath = new google.maps.Polyline({
+        path: flightPlanCoordinates,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+      });
+      flightPath.setMap(map);
+
+      flightPlanCoordinates.forEach(cord => {
+        const infoWindow = new google.maps.InfoWindow();
+        const marker = new google.maps.Marker({
+          position: cord,
+          icon: {
+            path: "M24 23.5q1.45 0 2.475-1.025Q27.5 21.45 27.5 20q0-1.45-1.025-2.475Q25.45 16.5 24 16.5q-1.45 0-2.475 1.025Q20.5 18.55 20.5 20q0 1.45 1.025 2.475Q22.55 23.5 24 23.5ZM24 44q-8.05-6.85-12.025-12.725Q8 25.4 8 20.4q0-7.5 4.825-11.95Q17.65 4 24 4q6.35 0 11.175 4.45Q40 12.9 40 20.4q0 5-3.975 10.875T24 44Z",
+            fillColor: "blue",
+            fillOpacity: 1,
+            strokeWeight: 0,
+            rotation: 0,
+            scale: .5,
+            anchor: new google.maps.Point(25, 41)
+          },
+          map: map
+        });
+        infoWindow.setContent("Rejected based on sometin'");
+        infoWindow.open(map, marker);
+      });
+
+
     }
 
     window.initMap = initMap;
@@ -47,7 +191,7 @@
     let testCases = [
       [
         {
-          userId: "admin@admin.hu",
+          userId: "admin@admin.hu"
 
         },
         [
@@ -55,7 +199,7 @@
             userId: "admin@admin.hu",
             type: "fine",
             lat: 54.4,
-            long: 84.4,
+            long: 84.4
           }
         ],
         [
@@ -69,14 +213,75 @@
 </head>
 <body>
 <div class="container-fluid">
-  <div class="col-md-3">
-    Form container
-  </div>
-  <div class="col-md-2">
+  <div class="row">
+    <div class="col-md-3 form-container">
+      <form>
+        <label>User ID</label>
+        <input name="userId" type="text">
+        <label>Card Number</label>
+        <input name="cardNumber" type="text">
+        <label>IP</label>
+        <input name="ip" type="text">
+        <div class="row positionContainer">
+          <div class="col-md-6">
+            <label>LONG</label>
+            <input name="userId" type="text">
+          </div>
+          <div class="col-md-6">
+            <label>LAT</label>
+            <input name="userId" type="text">
+          </div>
+        </div>
+        <div class="addressContainer billingAddress">
+          <strong>Billing address</strong>
 
-  </div>
-  <div class="col-md-7">
-    <div id="map"></div>
+          <label>ZIP</label>
+          <input name="zip" type="text">
+          <label>Country</label>
+          <input name="country" type="text">
+          <label>City</label>
+          <input name="city" type="text">
+          <label>Street</label>
+          <input name="street" type="text">
+
+
+          <div class="addressContainer shippingAddress">
+            <strong>Billing address</strong>
+
+            <label>ZIP</label>
+            <input name="zip" type="text">
+            <label>Country</label>
+            <input name="country" type="text">
+            <label>City</label>
+            <input name="city" type="text">
+            <label>Street</label>
+            <input name="street" type="text">
+          </div>
+        </div>
+        <button class="btn btn-primary">Submit</button>
+      </form>
+
+    </div>
+    <div class="col-md-2 test-case-container">
+      <div class="card selected">
+        <div class="card-body">
+          <h5 class="card-title">Card title</h5>
+          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          <span class="btn text-danger">Failed</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Card title</h5>
+          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          <span class="btn text-success">Success</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7 map-container">
+      <div id="map"></div>
+    </div>
   </div>
 </div>
 
