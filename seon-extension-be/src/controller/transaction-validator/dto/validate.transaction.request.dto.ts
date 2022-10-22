@@ -4,4 +4,10 @@ export type ValidateTransactionRequestDto = {
     ip: string;
     lat: number;
     long: number;
+    billingAddress: {
+        zipCode: string;
+        country: string;
+        city: string;
+        
+    }
 };

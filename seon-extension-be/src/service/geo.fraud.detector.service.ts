@@ -12,8 +12,13 @@ export type TransactionModel = {
   lat: number;
   long: number;
 };
+
+type GeoCoordinate = {
+  lat: number;
+  long: number;
+};
 const GeoUtil = {
-  distance: (start: { lat: number, long: number }, end: { lat: number, long: number }): number => {
+  distance: (start: GeoCoordinate, end: GeoCoordinate): number => {
     const R = 6371e3;
     const fi1 = start.lat * Math.PI / 180;
     const fi2 = end.lat * Math.PI / 180;
@@ -23,7 +28,14 @@ const GeoUtil = {
       Math.cos(fi1) * Math.cos(fi2) *
       Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    return Math.abs(R * c);
+  },
+  midPoint(start: GeoCoordinate, end: GeoCoordinate): GeoCoordinate {
+    //TOOD: GMP Adjust
+    return {
+      lat: (start.lat + end.lat) / 2,
+      long: (start.long + end.long) / 2
+    };
   },
   speed: (distanceMeter: number, millis: number): number => {
     return distanceMeter / (millis / 1000);
@@ -39,7 +51,7 @@ const TimeUtil = {
       } else {
         ts = Date.parse(start);
       }
-      return ts;
+      return Math.abs(ts);
     };
 
     return toTimeStamp(end) - toTimeStamp(start);
@@ -94,12 +106,24 @@ export class GeoFraudDetectorService {
       }
     },
     LARGE_TRANSACTION_GEO_LOCATION_DEVIATION: async (history, transaction) => {
-      let groups = [];
-      for(let historyItem of history){
-        let closestGroup = (() => {
-
-          return null;
+      let groups: Array<{ lat: number, long: number }> = [];
+      const GROUP_TRESHOLD = 3_000;
+      const GROUP_FORGIVE_COUNT = 20
+      for (let historyItem of history) {
+        let closestGroupIndex = (() => {
+          let targetIndex = groups.findIndex(group => GeoUtil.distance(group, historyItem) < GROUP_TRESHOLD);
+          return targetIndex;
         })();
+        if (closestGroupIndex < 0) {
+          groups.push(historyItem);
+        } else {
+          let targetGroup = groups[closestGroupIndex]
+          groups[closestGroupIndex] = GeoUtil.midPoint(targetGroup, historyItem)
+        }
+      }
+
+      if(!groups.some(group => GeoUtil.distance(group, transaction) < GROUP_TRESHOLD) && groups.length < GROUP_FORGIVE_COUNT){
+        return 10;
       }
       return 0;
     },
