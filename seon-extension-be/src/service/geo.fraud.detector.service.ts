@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { GeoEntryEntity } from "src/database/entitiy/geo.entry.entity";
 import { Repository } from "typeorm";
 import * as axios from "axios";
+import { GeoUpdateService } from "./geo.update.service";
 
 export type TransactionModel = {
   userId: string;
@@ -86,17 +87,49 @@ export class GeoFraudDetectorService {
         "India"
       ];
       let response = await axios.default.get(`https://api.opencagedata.com/geocode/v1/json?key=7590be68ca1b4a9bbfbd3643a15d3af4&pretty=1&no_annotations=1&q=${transaction.lat},${transaction.long}`, {});
-      console.log(response.status);
-        console.log(response.data);
-
-      console.log(typeof response.data);
-
       if (response.data.results.some(result => blacklistedCountries.includes(result.components.country))) {
         return 98;
       } else {
         return 0;
       }
+    },
+    LARGE_TRANSACTION_GEO_LOCATION_DEVIATION: async (history, transaction) => {
+      let groups = [];
+      for(let historyItem of history){
+        let closestGroup = (() => {
 
+          return null;
+        })();
+      }
+      return 0;
+    },
+    IP_GEO_REAL_GEO_DISTANCE_TOO_LARGE: async (history, transaction) => {
+      if (history.length == 0) {
+        return 0;
+      }
+
+      let response = await axios.default.get(`http://ip-api.com/json/${transaction.ip}`);
+      console.log(response.data);
+      if (response.data.status == "fail" || !response.data.lat || !response.data.lon) {
+        return 0;
+      }
+      let lastHistoryItem = history[history.length - 1];
+      console.log(TimeUtil.duration(lastHistoryItem.timestamp, new Date()));
+      if (TimeUtil.duration(lastHistoryItem.timestamp, new Date()) >= 1000 * 60 * 60 * 24) {
+        //Too old time util
+        return 0;
+      }
+      if (Math.abs(GeoUtil.distance(lastHistoryItem, {
+        lat: response.data.lat,
+        long: response.data.lon
+      })) > 1_000_000) {
+        return 96;
+      } else {
+        return 0;
+      }
+    },
+    ONE_IP_MULTIPLE_SHIPPING_ADDRESS: async (history, transaction) => {
+      return 0;
     }
   };
 
@@ -113,9 +146,16 @@ export class GeoFraudDetectorService {
     let rulesResult = await Promise.all(
       Object.keys(this.rules).map(key => {
         let rule = this.rules[key];
-        return rule(history, transaction);
+        return rule(history, transaction)
+          .then(result => {
+            return [key, result, null];
+          })
+          .catch(error => {
+            return [key, -1, error];
+          });
       })
     );
-    return Math.min(100, Math.max(...rulesResult));
+    console.table(rulesResult);
+    return Math.min(100, Math.max(...rulesResult.map(res => res[1])));
   }
 }
