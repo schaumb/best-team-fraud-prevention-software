@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Best Business - NotLiveJasmin.com</title>
   <!-- CSS only -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
         rel="stylesheet"
         integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
@@ -79,6 +80,9 @@
       .gm-ui-hover-effect {
           display: none !important;
       }
+      .card-template {
+          display: none;
+      }
   </style>
   <script>
     // Initialize and add the map
@@ -118,10 +122,10 @@
       // });
 
 
-      const center = new google.maps.LatLng(-33.712451, 150.311823);
-      const map = new google.maps.Map(document.getElementById("map"), {
+      const center = new google.maps.LatLng(47.503876, 19.055026);
+      window.map = new google.maps.Map(document.getElementById("map"), {
         zoom: 15,
-        center: { lat: 37.772, lng: -122.214 },
+        center: center,
         zoomControl: false,
         mapTypeControl: false,
         scaleControl: false,
@@ -148,67 +152,165 @@
           }
         ]
       });
-
-      const flightPlanCoordinates = [
-        { lat: 37.772, lng: -122.214 },
-        { lat: 21.291, lng: -157.821 },
-        { lat: -18.142, lng: 178.431 },
-        { lat: -27.467, lng: 153.027 }
-      ];
-      const flightPath = new google.maps.Polyline({
-        path: flightPlanCoordinates,
-        geodesic: true,
-        strokeColor: "#FF0000",
-        strokeOpacity: 1.0,
-        strokeWeight: 2
-      });
-      flightPath.setMap(map);
-
-      flightPlanCoordinates.forEach(cord => {
-        const infoWindow = new google.maps.InfoWindow();
-        const marker = new google.maps.Marker({
-          position: cord,
-          icon: {
-            path: "M24 23.5q1.45 0 2.475-1.025Q27.5 21.45 27.5 20q0-1.45-1.025-2.475Q25.45 16.5 24 16.5q-1.45 0-2.475 1.025Q20.5 18.55 20.5 20q0 1.45 1.025 2.475Q22.55 23.5 24 23.5ZM24 44q-8.05-6.85-12.025-12.725Q8 25.4 8 20.4q0-7.5 4.825-11.95Q17.65 4 24 4q6.35 0 11.175 4.45Q40 12.9 40 20.4q0 5-3.975 10.875T24 44Z",
-            fillColor: "blue",
-            fillOpacity: 1,
-            strokeWeight: 0,
-            rotation: 0,
-            scale: .5,
-            anchor: new google.maps.Point(25, 41)
-          },
-          map: map
-        });
-        infoWindow.setContent("Rejected based on sometin'");
-        infoWindow.open(map, marker);
-      });
-
-
     }
 
     window.initMap = initMap;
-
     let testCases = [
       [
         {
-          userId: "admin@admin.hu"
-
+          userId: "sanyi@admin.hu",
+          cardNumber: "1234-5678-1234-5678",
+          ip: "144.155.166.177",
+          lat: 49.504131,
+          long: 19.055381,
+          billingAddress: {
+            zipCode: "1014",
+            country: "Hungary",
+            city: "Budapest",
+            street: "Országház u. 2"
+          },
+          shippingAddress: {
+            zipCode: "1055",
+            country: "Hungary",
+            city: "Budapest",
+            street: "Kossuth Lajos tér 12"
+          },
+          title: "Valid transaction #1",
+          description: "Sanyi's daily grocery shopping in Budapest",
+          isSuccess: true
         },
         [
           {
-            userId: "admin@admin.hu",
+            userId: "sanyi@admin.hu",
             type: "fine",
-            lat: 54.4,
-            long: 84.4
+            lat: 47.503876,
+            long: 19.055026
+          },
+          {
+            userId: "sanyi@admin.hu",
+            type: "fine",
+            lat: 48.503676,
+            long: 19.055026
           }
         ],
         [
           {
-            "userId": "admin@admin.hu"
+            id: 1,
+            userId: "sanyi@admin.hu",
+            cardNumber: "1234-5678-1234-5678",
+            ip: "144.155.166.177",
+            lat: 49.507456,
+            long: 19.060375,
+            billingZipCode: "1014",
+            billingCountry: "Hungary",
+            billingCity: "Budapest",
+            billingStreet: "Országház u. 2",
+            shippingZipCode: "1055",
+            shippingCountry: "Hungary",
+            shippingCity: "Budapest",
+            shippingStreet: "Kossuth Lajos tér 12"
           }
         ]
       ]
     ];
+
+    window.onload = () => {
+      let template = document.querySelector(".card-template > div");
+      for(let testCase of testCases){
+        (tk => {
+          let testCaseNode = template.cloneNode(true);
+          let childNodes = Array.from(Array.from(testCaseNode.childNodes)[1].childNodes);
+          let titleNode = childNodes[1];
+          let descriptionNode = childNodes[3];
+          let stateNode = childNodes[5];
+          titleNode.innerText = tk[0].title;
+          descriptionNode.innerText = tk[0].description;
+          if(testCase[0].isSuccess){
+            stateNode.classList.add("text-success");
+            stateNode.innerText = "Success";
+          }else {
+            stateNode.classList.add("text-danger");
+            stateNode.innerText = "Fail";
+          }
+
+          testCaseNode.onclick = () => {
+            document.querySelector("[name='userId']").value = tk[0].userId;
+            document.querySelector("[name='cardNumber']").value = tk[0].cardNumber;
+            document.querySelector("[name='ip']").value = tk[0].ip;
+            document.querySelector("[name='lat']").value = tk[0].lat;
+            document.querySelector("[name='long']").value = tk[0].long;
+            document.querySelector(".billingAddress [name='zip']").value = tk[0].billingAddress.zipCode;
+            document.querySelector(".billingAddress [name='country']").value = tk[0].billingAddress.country;
+            document.querySelector(".billingAddress [name='city']").value = tk[0].billingAddress.city;
+            document.querySelector(".billingAddress [name='street']").value = tk[0].billingAddress.street;
+
+            document.querySelector(".shippingAddress [name='zip']").value = tk[0].shippingAddress.zipCode;
+            document.querySelector(".shippingAddress [name='country']").value = tk[0].shippingAddress.country;
+            document.querySelector(".shippingAddress [name='city']").value = tk[0].shippingAddress.city;
+            document.querySelector(".shippingAddress [name='street']").value = tk[0].shippingAddress.street;
+
+
+            let bounds = new google.maps.LatLngBounds();
+            const flightPlanCoordinates = tk[1].map(item => ({lat: item.lat, lng: item.long}));
+            console.log(tk[1]);
+            console.log(flightPlanCoordinates);
+            const flightPath = new google.maps.Polyline({
+              path: flightPlanCoordinates,
+              geodesic: true,
+              strokeColor: "#007bff",
+              strokeOpacity: 1.0,
+              strokeWeight: 2
+            });
+            flightPath.setMap(window.map);
+
+            flightPlanCoordinates.forEach(cord => {
+              const marker = new google.maps.Marker({
+                position: cord,
+                icon: {
+                  path: "M24 23.5q1.45 0 2.475-1.025Q27.5 21.45 27.5 20q0-1.45-1.025-2.475Q25.45 16.5 24 16.5q-1.45 0-2.475 1.025Q20.5 18.55 20.5 20q0 1.45 1.025 2.475Q22.55 23.5 24 23.5ZM24 44q-8.05-6.85-12.025-12.725Q8 25.4 8 20.4q0-7.5 4.825-11.95Q17.65 4 24 4q6.35 0 11.175 4.45Q40 12.9 40 20.4q0 5-3.975 10.875T24 44Z",
+                  fillColor: "#FF6A00",
+                  fillOpacity: 1,
+                  strokeWeight: 0,
+                  rotation: 0,
+                  scale: .5,
+                  anchor: new google.maps.Point(25, 41)
+                },
+                map: map
+              });
+              bounds.extend(cord);
+            });
+
+            const marker = new google.maps.Marker({
+              position: { lat: tk[0].lat, lng: tk[0].long },
+              icon: {
+                path: "M24 23.5q1.45 0 2.475-1.025Q27.5 21.45 27.5 20q0-1.45-1.025-2.475Q25.45 16.5 24 16.5q-1.45 0-2.475 1.025Q20.5 18.55 20.5 20q0 1.45 1.025 2.475Q22.55 23.5 24 23.5ZM24 44q-8.05-6.85-12.025-12.725Q8 25.4 8 20.4q0-7.5 4.825-11.95Q17.65 4 24 4q6.35 0 11.175 4.45Q40 12.9 40 20.4q0 5-3.975 10.875T24 44Z",
+                fillColor: "#563d7c",
+                fillOpacity: 1,
+                strokeWeight: 0,
+                rotation: 0,
+                scale: .5,
+                anchor: new google.maps.Point(25, 41)
+              },
+              map: map
+            });
+            bounds.extend({ lat: tk[0].lat, lng: tk[0].long });
+            window.map.fitBounds(bounds);
+            const infoWindow = new google.maps.InfoWindow();
+            infoWindow.setContent(tk[0].description);
+            infoWindow.open(window.map, marker);
+          };
+
+          document.querySelector(".test-case-container").appendChild(testCaseNode);
+
+          //Map
+        })(testCase);
+
+      }
+    };
+
+    jQuery.post("/test-case", JSON.stringify(testCases[0]), (data) => {
+      console.log("");
+    });
   </script>
 </head>
 <body>
@@ -225,11 +327,11 @@
         <div class="row positionContainer">
           <div class="col-md-6">
             <label>LONG</label>
-            <input name="userId" type="text">
+            <input name="lat" type="text">
           </div>
           <div class="col-md-6">
             <label>LAT</label>
-            <input name="userId" type="text">
+            <input name="long" type="text">
           </div>
         </div>
         <div class="addressContainer billingAddress">
@@ -262,22 +364,17 @@
       </form>
 
     </div>
-    <div class="col-md-2 test-case-container">
-      <div class="card selected">
-        <div class="card-body">
-          <h5 class="card-title">Card title</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <span class="btn text-danger">Failed</span>
-        </div>
-      </div>
 
+    <div class="card-template">
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Card title</h5>
           <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <span class="btn text-success">Success</span>
+          <span>Failed</span>
         </div>
       </div>
+    </div>
+    <div class="col-md-2 test-case-container">
     </div>
     <div class="col-md-7 map-container">
       <div id="map"></div>
