@@ -19,9 +19,9 @@
           padding: 0;
       }
 
-      body > div,
-      body > div > div,
-      body > div > div > div {
+      body > .container-fluid,
+      body > .container-fluid > .row,
+      body > .container-fluid > .row > .form-container {
           height: 100%;
       }
 
@@ -48,15 +48,15 @@
 
       #map {
           height: 100%;
-          /* The height is 400 pixels */
           width: 100%;
-          /* The width is the width of the web page */
       }
-      .test-case-container{
+
+      .test-case-container {
           padding: 8px;
           box-sizing: border-box;
       }
-      .test-case-container > div{
+
+      .test-case-container > div {
           margin-top: 16px;
           margin-bottom: 16px;
           cursor: pointer;
@@ -68,9 +68,10 @@
           -ms-user-select: none; /* Internet Explorer/Edge */
       }
 
-      .test-case-container > div.selected{
+      .test-case-container > div.selected {
           background-color: #f4f4f4;
       }
+
       .test-case-container > div span {
           padding: 0;
           border: none !important;
@@ -80,27 +81,59 @@
       .gm-ui-hover-effect {
           display: none !important;
       }
+
       .card-template {
           display: none;
       }
 
-      .addressContainer{
+      .addressContainer {
           margin-top: 32px;
       }
 
-      .form-container{
+      .form-container {
           padding-top: 16px;
       }
+
       label {
           font-weight: bold;
       }
+
       strong {
           font-size: 16px;
           padding-bottom: 8px;
           display: block;
       }
+
       label {
           font-size: 12px;
+      }
+
+      .modal-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: none;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          z-index: 10000;
+      }
+
+      .modal-container.visible {
+          display: flex;
+      }
+
+      #modal {
+          padding: 16px;
+          border-radius: 16px;
+          background-color: white;
+          width: 300px;
+      }
+
+      #modal .modal-content {
+
       }
   </style>
   <script>
@@ -200,8 +233,8 @@
           userId: "sanyi@admin.hu",
           cardNumber: "1234-5678-1234-5678",
           ip: "176.63.155.129",
-          lat: 49.504131,
-          long: 20.055381,
+          lat: 61.66121177957895,
+          long: 93.24046232135419,
           billingAddress: {
             zipCode: "1014",
             country: "Hungary",
@@ -254,10 +287,18 @@
     ];
 
     window.onload = () => {
+      let showModal = (text) => {
+        document.querySelector("#modal .modal-content").innerText = text;
+        document.querySelector(".modal-container").classList.add("visible");
+      };
+
+      document.querySelector("#modal .btn").onclick = () => {
+        document.querySelector(".modal-container").classList.remove("visible");
+      };
       let template = document.querySelector(".card-template > div");
       var currentWindows = [];
       var markers = [];
-      for(let testCase of testCases){
+      for (let testCase of testCases) {
         (tk => {
           let testCaseNode = template.cloneNode(true);
           let childNodes = Array.from(Array.from(testCaseNode.childNodes)[1].childNodes);
@@ -266,13 +307,13 @@
           let stateNode = childNodes[5];
           titleNode.innerText = tk[0].title;
           descriptionNode.innerText = tk[0].description;
-          if(testCase[0].isSuccess == "warning"){
+          if (testCase[0].isSuccess == "warning") {
             stateNode.classList.add("text-warning");
             stateNode.innerText = "Review";
-          }else if(testCase[0].isSuccess == "fail"){
+          } else if (testCase[0].isSuccess == "fail") {
             stateNode.classList.add("text-danger");
             stateNode.innerText = "Reject";
-          }else{
+          } else {
             stateNode.classList.add("text-success");
             stateNode.innerText = "Approve";
           }
@@ -300,7 +341,7 @@
             document.querySelector(".shippingAddress [name='street']").value = tk[0].shippingAddress.street;
 
             let bounds = new google.maps.LatLngBounds();
-            const flightPlanCoordinates = tk[1].map(item => ({lat: item.lat, lng: item.long}));
+            const flightPlanCoordinates = tk[1].map(item => ({ lat: item.lat, lng: item.long }));
             const flightPath = new google.maps.Polyline({
               path: flightPlanCoordinates,
               geodesic: true,
@@ -351,18 +392,18 @@
             $.ajax({
               type: "POST",
               url: "/test-case",
-              async: false,
+              async: true,
               data: JSON.stringify(tk),
               success: (data) => {
                 let state = "block";
-                if(data.fraud_score < 10){
-                  state = "approve"
-                }else if(data.fraud_score < 20){
-                  state = "review"
+                if (data.fraud_score < 10) {
+                  state = "approve";
+                } else if (data.fraud_score < 20) {
+                  state = "review";
                 }
-                alert(`Points: ${data.fraud_score}, state: ${state}`);
+                showModal(`Points: ${data.fraud_score}, state: ${state}`);
               },
-              contentType: 'application/json; charset=utf-8',
+              contentType: "application/json; charset=utf-8",
               dataType: "json"
             });
           };
@@ -377,6 +418,12 @@
   </script>
 </head>
 <body>
+<div class="modal-container">
+  <div id="modal">
+    <div class="modal-content">Lorem ipsum</div>
+    <button class="btn btn-primary">Ok</button>
+  </div>
+</div>
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-3 form-container">
@@ -431,7 +478,8 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Card title</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's
+            content.</p>
           <span>Failed</span>
         </div>
       </div>
@@ -451,3 +499,4 @@
 ></script>
 </body>
 </html>
+  

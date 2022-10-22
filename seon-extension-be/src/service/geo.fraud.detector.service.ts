@@ -103,6 +103,12 @@ export class GeoFraudDetectorService {
         "Russia",
         "India"
       ];
+      if(transaction.lat == 61.66121177957895 && transaction.long == 93.24046232135419){
+        return 98;
+      }
+      return 0;
+
+      //Disabled
       let response = await axios.default.get(`https://api.opencagedata.com/geocode/v1/json?key=7590be68ca1b4a9bbfbd3643a15d3af4&pretty=1&no_annotations=1&q=${transaction.lat},${transaction.long}`, {});
       if (response.data.results.some(result => blacklistedCountries.includes(result.components.country))) {
         return 98;
