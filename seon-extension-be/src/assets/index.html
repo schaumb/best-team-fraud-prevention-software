@@ -143,7 +143,7 @@
         {
           userId: "sanyi@admin.hu",
           cardNumber: "1234-5678-1234-5678",
-          ip: "144.155.166.177",
+          ip: "176.63.155.129",
           lat: 49.504131,
           long: 19.055381,
           billingAddress: {
@@ -160,7 +160,7 @@
           },
           title: "Valid transaction #1",
           description: "Sanyi's daily grocery shopping in Budapest",
-          isSuccess: true
+          isSuccess: "warning"
         },
         [
           {
@@ -181,7 +181,7 @@
             id: 1,
             userId: "sanyi@admin.hu",
             cardNumber: "1234-5678-1234-5678",
-            ip: "144.155.166.177",
+            ip: "176.63.155.129",
             lat: 49.507456,
             long: 19.060375,
             billingZipCode: "1014",
@@ -199,7 +199,7 @@
         {
           userId: "sanyi@admin.hu",
           cardNumber: "1234-5678-1234-5678",
-          ip: "144.155.166.177",
+          ip: "176.63.155.129",
           lat: 49.504131,
           long: 20.055381,
           billingAddress: {
@@ -216,7 +216,7 @@
           },
           title: "Invalid transaction #1",
           description: "Sanyi's daily grocery shopping in Budapest",
-          isSuccess: false
+          isSuccess: "fail"
         },
         [
           {
@@ -237,7 +237,7 @@
             id: 1,
             userId: "sanyi@admin.hu",
             cardNumber: "1234-5678-1234-5678",
-            ip: "144.155.166.177",
+            ip: "176.63.155.129",
             lat: 49.507456,
             long: 19.060375,
             billingZipCode: "1014",
@@ -266,12 +266,15 @@
           let stateNode = childNodes[5];
           titleNode.innerText = tk[0].title;
           descriptionNode.innerText = tk[0].description;
-          if(testCase[0].isSuccess){
-            stateNode.classList.add("text-success");
-            stateNode.innerText = "Success";
-          }else {
+          if(testCase[0].isSuccess == "warning"){
+            stateNode.classList.add("text-warning");
+            stateNode.innerText = "Review";
+          }else if(testCase[0].isSuccess == "fail"){
             stateNode.classList.add("text-danger");
-            stateNode.innerText = "Fail";
+            stateNode.innerText = "Reject";
+          }else{
+            stateNode.classList.add("text-success");
+            stateNode.innerText = "Approve";
           }
 
           testCaseNode.onclick = () => {
@@ -348,12 +351,13 @@
             $.ajax({
               type: "POST",
               url: "/test-case",
+              async: false,
               data: JSON.stringify(tk),
               success: (data) => {
                 let state = "block";
-                if(data.fraud_score < 33){
+                if(data.fraud_score < 10){
                   state = "approve"
-                }else if(data.fraud_score < 66){
+                }else if(data.fraud_score < 20){
                   state = "review"
                 }
                 alert(`Points: ${data.fraud_score}, state: ${state}`);
