@@ -6,6 +6,8 @@ import { TransactionValidatorController } from './controller/transaction-validat
 import { GeoEntryEntity } from './database/entitiy/geo.entry.entity';
 import { GeoFraudDetectorService } from "./service/geo.fraud.detector.service";
 import { GeoUpdateService } from "./service/geo.update.service";
+import { TransactionService } from "./service/transaction.service";
+import { TransactionEntryEntity } from "./database/entitiy/transaction.entry.entity";
 
 @Module({
   imports: [
@@ -13,10 +15,11 @@ import { GeoUpdateService } from "./service/geo.update.service";
       type: "sqlite",
       database: path.join(process.cwd(), "database", "database.sqlite"),
       synchronize: true,
-      entities: [GeoEntryEntity]
+      entities: [GeoEntryEntity, TransactionEntryEntity]
     }),
     TypeOrmModule.forFeature([
-      GeoEntryEntity 
+      GeoEntryEntity,
+      TransactionEntryEntity
     ])
   ],
   controllers: [
@@ -25,7 +28,8 @@ import { GeoUpdateService } from "./service/geo.update.service";
   ],
   providers: [
     GeoFraudDetectorService,
-    GeoUpdateService
+    GeoUpdateService,
+    TransactionService
   ],
 })
 export class AppModule {}
