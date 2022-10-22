@@ -4,6 +4,8 @@ import { GeoEntryEntity } from "src/database/entitiy/geo.entry.entity";
 import { Repository } from "typeorm";
 import * as axios from "axios";
 import { GeoUpdateService } from "./geo.update.service";
+import { TransactionEntryEntity } from "../database/entitiy/transaction.entry.entity";
+import { Address } from "../controller/transaction-validator/dto/validate.transaction.request.dto";
 
 export type TransactionModel = {
   userId: string;
@@ -11,6 +13,8 @@ export type TransactionModel = {
   ip: string;
   lat: number;
   long: number;
+  billingAddress: Address,
+  shippingAddress: Address
 };
 
 type GeoCoordinate = {
@@ -61,11 +65,12 @@ const TimeUtil = {
 @Injectable()
 export class GeoFraudDetectorService {
   constructor(
-    @InjectRepository(GeoEntryEntity) private geoEntryEntity: Repository<GeoEntryEntity>
+    @InjectRepository(GeoEntryEntity) private geoEntryEntity: Repository<GeoEntryEntity>,
+    @InjectRepository(TransactionEntryEntity) private transactionEntryEntityRepository: Repository<TransactionEntryEntity>
   ) {
   }
 
-  private rules: { [key: string]: (history: Array<GeoEntryEntity>, transaction: TransactionModel) => Promise<number> } = {
+  private rules: { [key: string]: (history: Array<GeoEntryEntity>, transaction: TransactionModel, previousTransactions: Array<TransactionEntryEntity>) => Promise<number> } = {
     CLOAK_FORMULA: async (history, transaction) => {
       if (history.length == 0) {
         return 0;
@@ -152,7 +157,29 @@ export class GeoFraudDetectorService {
         return 0;
       }
     },
-    ONE_IP_MULTIPLE_SHIPPING_ADDRESS: async (history, transaction) => {
+    ONE_IP_MULTIPLE_SHIPPING_ADDRESS: async (history, transaction, previousTransactions) => {
+      let prevTransactionsFromTheSameIp = previousTransactions.filter(trans => trans.ip == transaction.ip);
+      const DIFFERENT_ADDRESS_COUNTER_TRIGGER = 10
+      let differentAddressCount = prevTransactionsFromTheSameIp.reduce((prev, current) => {
+        let pairs = [
+          [ current.billingZipCode, transaction.billingAddress.zipCode ],
+          [ current.billingCountry, transaction.billingAddress.country ],
+          [ current.billingCity, transaction.billingAddress.city ],
+          [ current.billingStreet, transaction.billingAddress.street ],
+          [ current.shippingZipCode, transaction.shippingAddress.zipCode ],
+          [ current.shippingCountry, transaction.shippingAddress.country ],
+          [ current.shippingCity, transaction.shippingAddress.city ],
+          [ current.shippingStreet, transaction.shippingAddress.street ],
+        ];
+        if(pairs.some(pair => pair[0] != pair[1])){
+          return prev + 1;
+        }
+        return prev;
+      }, 0);
+
+      if(differentAddressCount >= DIFFERENT_ADDRESS_COUNTER_TRIGGER){
+        return 10;
+      }
       return 0;
     }
   };
@@ -167,10 +194,16 @@ export class GeoFraudDetectorService {
       }
     });
 
+    let transactions = await this.transactionEntryEntityRepository.find({
+      where: {
+        userId: transaction.userId
+      }
+    });
+
     let rulesResult = await Promise.all(
       Object.keys(this.rules).map(key => {
         let rule = this.rules[key];
-        return rule(history, transaction)
+        return rule(history, transaction, transactions)
           .then(result => {
             return [key, result, null];
           })
