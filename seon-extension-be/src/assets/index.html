@@ -17,26 +17,54 @@
           margin: 0;
           padding: 0;
       }
+      #map {
+          height: 400px;
+          /* The height is 400 pixels */
+          width: 100%;
+          /* The width is the width of the web page */
+      }
   </style>
   <script>
     // Initialize and add the map
     function initMap() {
       console.log("Init map called...");
       // The location of Uluru
-      const uluru = { lat: -25.344, lng: 131.031 };
+      // const uluru = { lat: -25.344, lng: 131.031 };
       // The map, centered at Uluru
       const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 4,
-        center: uluru,
+        center: { lat: -34.397, lng: 150.644 },
+        zoom: 8,
       });
-      // The marker, positioned at Uluru
-      const marker = new google.maps.Marker({
-        position: uluru,
-        map: map,
-      });
+      // // The marker, positioned at Uluru
+      // const marker = new google.maps.Marker({
+      //   position: uluru,
+      //   map: map,
+      // });
     }
 
     window.initMap = initMap;
+
+    let testCases = [
+      [
+        {
+          userId: "admin@admin.hu",
+
+        },
+        [
+          {
+            userId: "admin@admin.hu",
+            type: "fine",
+            lat: 54.4,
+            long: 84.4,
+          }
+        ],
+        [
+          {
+            "userId": "admin@admin.hu"
+          }
+        ]
+      ]
+    ];
   </script>
 </head>
 <body>
