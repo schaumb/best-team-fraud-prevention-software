@@ -113,7 +113,7 @@ export class GeoFraudDetectorService {
     LARGE_TRANSACTION_GEO_LOCATION_DEVIATION: async (history, transaction) => {
       let groups: Array<{ lat: number, long: number }> = [];
       const GROUP_TRESHOLD = 3_000;
-      const GROUP_FORGIVE_COUNT = 20
+      const GROUP_FORGIVE_COUNT = 20;
       for (let historyItem of history) {
         let closestGroupIndex = (() => {
           let targetIndex = groups.findIndex(group => GeoUtil.distance(group, historyItem) < GROUP_TRESHOLD);
@@ -122,12 +122,12 @@ export class GeoFraudDetectorService {
         if (closestGroupIndex < 0) {
           groups.push(historyItem);
         } else {
-          let targetGroup = groups[closestGroupIndex]
-          groups[closestGroupIndex] = GeoUtil.midPoint(targetGroup, historyItem)
+          let targetGroup = groups[closestGroupIndex];
+          groups[closestGroupIndex] = GeoUtil.midPoint(targetGroup, historyItem);
         }
       }
 
-      if(!groups.some(group => GeoUtil.distance(group, transaction) < GROUP_TRESHOLD) && groups.length < GROUP_FORGIVE_COUNT){
+      if (!groups.some(group => GeoUtil.distance(group, transaction) < GROUP_TRESHOLD) && groups.length < GROUP_FORGIVE_COUNT) {
         return 10;
       }
       return 0;
@@ -159,46 +159,50 @@ export class GeoFraudDetectorService {
     },
     ONE_IP_MULTIPLE_SHIPPING_ADDRESS: async (history, transaction, previousTransactions) => {
       let prevTransactionsFromTheSameIp = previousTransactions.filter(trans => trans.ip == transaction.ip);
-      const DIFFERENT_ADDRESS_COUNTER_TRIGGER = 2
+      const DIFFERENT_ADDRESS_COUNTER_TRIGGER = 2;
       let differentAddressCount = prevTransactionsFromTheSameIp.reduce((prev, current) => {
         let pairs = [
-          [ current.billingZipCode, transaction.billingAddress.zipCode ],
-          [ current.billingCountry, transaction.billingAddress.country ],
-          [ current.billingCity, transaction.billingAddress.city ],
-          [ current.billingStreet, transaction.billingAddress.street ],
-          [ current.shippingZipCode, transaction.shippingAddress.zipCode ],
-          [ current.shippingCountry, transaction.shippingAddress.country ],
-          [ current.shippingCity, transaction.shippingAddress.city ],
-          [ current.shippingStreet, transaction.shippingAddress.street ],
+          [current.billingZipCode, transaction.billingAddress.zipCode],
+          [current.billingCountry, transaction.billingAddress.country],
+          [current.billingCity, transaction.billingAddress.city],
+          [current.billingStreet, transaction.billingAddress.street],
+          [current.shippingZipCode, transaction.shippingAddress.zipCode],
+          [current.shippingCountry, transaction.shippingAddress.country],
+          [current.shippingCity, transaction.shippingAddress.city],
+          [current.shippingStreet, transaction.shippingAddress.street]
         ];
-        if(pairs.some(pair => pair[0] != pair[1])){
+        if (pairs.some(pair => pair[0] != pair[1])) {
           return prev + 1;
         }
         return prev;
       }, 0);
 
-      if(differentAddressCount >= DIFFERENT_ADDRESS_COUNTER_TRIGGER){
+      if (differentAddressCount >= DIFFERENT_ADDRESS_COUNTER_TRIGGER) {
         return 10;
       }
       return 0;
     }
   };
 
-  async detect(transaction: TransactionModel): Promise<number> {
-    let history = await this.geoEntryEntity.find({
-      where: {
-        userId: transaction.userId
-      },
-      order: {
-        timestamp: "ASC"
-      }
-    });
-
-    let transactions = await this.transactionEntryEntityRepository.find({
-      where: {
-        userId: transaction.userId
-      }
-    });
+  async detect(transaction: TransactionModel, history?: any, transactions?: any): Promise<number> {
+    console.log(transaction);
+    if (!history) {
+      history = await this.geoEntryEntity.find({
+        where: {
+          userId: transaction.userId
+        },
+        order: {
+          timestamp: "ASC"
+        }
+      });
+    }
+    if (!transactions) {
+      transactions = await this.transactionEntryEntityRepository.find({
+        where: {
+          userId: transaction.userId
+        }
+      });
+    }
 
     let rulesResult = await Promise.all(
       Object.keys(this.rules).map(key => {

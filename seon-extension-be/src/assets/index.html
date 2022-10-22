@@ -83,45 +83,28 @@
       .card-template {
           display: none;
       }
+
+      .addressContainer{
+          margin-top: 32px;
+      }
+
+      .form-container{
+          padding-top: 16px;
+      }
+      label {
+          font-weight: bold;
+      }
+      strong {
+          font-size: 16px;
+          padding-bottom: 8px;
+          display: block;
+      }
+      label {
+          font-size: 12px;
+      }
   </style>
   <script>
-    // Initialize and add the map
     function initMap() {
-      // console.log("Init map called...");
-      // // The location of Uluru
-      // // const uluru = { lat: -25.344, lng: 131.031 };
-      // // The map, centered at Uluru
-      // const map = new google.maps.Map(document.getElementById("map"), {
-      //   zoom: 12,
-      //   center: { lat: 34.84555, lng: -111.8035 }
-      // });
-      // // Set LatLng and title text for the markers. The first marker (Boynton Pass)
-      // // receives the initial focus when tab is pressed. Use arrow keys to
-      // // move between markers; press tab again to cycle through the map controls.
-      // const tourStops = [
-      //   [{ lat: 34.8791806, lng: -111.8265049 }, "Boynton Pass"],
-      //   [{ lat: 34.8559195, lng: -111.7988186 }, "Airport Mesa"],
-      //   [{ lat: 34.832149, lng: -111.7695277 }, "Chapel of the Holy Cross"],
-      //   [{ lat: 34.823736, lng: -111.8001857 }, "Red Rock Crossing"],
-      //   [{ lat: 34.800326, lng: -111.7665047 }, "Bell Rock"]
-      // ];
-      // // Create an info window to share between markers.
-      //
-      // // Create the markers.
-      // tourStops.forEach(([position, title], i) => {
-      //   const infoWindow = new google.maps.InfoWindow();
-      //   const marker = new google.maps.Marker({
-      //     position,
-      //     map,
-      //     title: `${i + 1}. ${title}`,
-      //     label: `${i + 1}`,
-      //     optimized: false
-      //   });
-      //   infoWindow.setContent(marker.getTitle());
-      //   infoWindow.open(marker.getMap(), marker);
-      // });
-
-
       const center = new google.maps.LatLng(47.503876, 19.055026);
       window.map = new google.maps.Map(document.getElementById("map"), {
         zoom: 15,
@@ -211,11 +194,69 @@
             shippingStreet: "Kossuth Lajos tér 12"
           }
         ]
+      ],
+      [
+        {
+          userId: "sanyi@admin.hu",
+          cardNumber: "1234-5678-1234-5678",
+          ip: "144.155.166.177",
+          lat: 49.504131,
+          long: 20.055381,
+          billingAddress: {
+            zipCode: "1014",
+            country: "Hungary",
+            city: "Budapest",
+            street: "Országház u. 2"
+          },
+          shippingAddress: {
+            zipCode: "1055",
+            country: "Hungary",
+            city: "Budapest",
+            street: "Kossuth Lajos tér 12"
+          },
+          title: "Invalid transaction #1",
+          description: "Sanyi's daily grocery shopping in Budapest",
+          isSuccess: false
+        },
+        [
+          {
+            userId: "sanyi@admin.hu",
+            type: "fine",
+            lat: 47.503876,
+            long: 20.055026
+          },
+          {
+            userId: "sanyi@admin.hu",
+            type: "fine",
+            lat: 48.503676,
+            long: 20.055026
+          }
+        ],
+        [
+          {
+            id: 1,
+            userId: "sanyi@admin.hu",
+            cardNumber: "1234-5678-1234-5678",
+            ip: "144.155.166.177",
+            lat: 49.507456,
+            long: 19.060375,
+            billingZipCode: "1014",
+            billingCountry: "Hungary",
+            billingCity: "Budapest",
+            billingStreet: "Országház u. 2",
+            shippingZipCode: "1055",
+            shippingCountry: "Hungary",
+            shippingCity: "Budapest",
+            shippingStreet: "Kossuth Lajos tér 12"
+          }
+        ]
       ]
     ];
 
     window.onload = () => {
       let template = document.querySelector(".card-template > div");
+      var currentWindows = [];
+      var markers = [];
       for(let testCase of testCases){
         (tk => {
           let testCaseNode = template.cloneNode(true);
@@ -234,6 +275,12 @@
           }
 
           testCaseNode.onclick = () => {
+            Array.from(document.querySelectorAll(".test-case-container > div")).forEach(item => item.classList.remove("selected"));
+            testCaseNode.classList.add("selected");
+            currentWindows.forEach(item => item.close());
+            currentWindows = [];
+            markers.forEach(item => item.setMap(null));
+            markers = [];
             document.querySelector("[name='userId']").value = tk[0].userId;
             document.querySelector("[name='cardNumber']").value = tk[0].cardNumber;
             document.querySelector("[name='ip']").value = tk[0].ip;
@@ -249,11 +296,8 @@
             document.querySelector(".shippingAddress [name='city']").value = tk[0].shippingAddress.city;
             document.querySelector(".shippingAddress [name='street']").value = tk[0].shippingAddress.street;
 
-
             let bounds = new google.maps.LatLngBounds();
             const flightPlanCoordinates = tk[1].map(item => ({lat: item.lat, lng: item.long}));
-            console.log(tk[1]);
-            console.log(flightPlanCoordinates);
             const flightPath = new google.maps.Polyline({
               path: flightPlanCoordinates,
               geodesic: true,
@@ -261,8 +305,8 @@
               strokeOpacity: 1.0,
               strokeWeight: 2
             });
+            markers.push(flightPath);
             flightPath.setMap(window.map);
-
             flightPlanCoordinates.forEach(cord => {
               const marker = new google.maps.Marker({
                 position: cord,
@@ -277,6 +321,7 @@
                 },
                 map: map
               });
+              markers.push(marker);
               bounds.extend(cord);
             });
 
@@ -293,11 +338,29 @@
               },
               map: map
             });
+            markers.push(marker);
             bounds.extend({ lat: tk[0].lat, lng: tk[0].long });
             window.map.fitBounds(bounds);
             const infoWindow = new google.maps.InfoWindow();
+            currentWindows.push(infoWindow);
             infoWindow.setContent(tk[0].description);
             infoWindow.open(window.map, marker);
+            $.ajax({
+              type: "POST",
+              url: "/test-case",
+              data: JSON.stringify(tk),
+              success: (data) => {
+                let state = "block";
+                if(data.fraud_score < 33){
+                  state = "approve"
+                }else if(data.fraud_score < 66){
+                  state = "review"
+                }
+                alert(`Points: ${data.fraud_score}, state: ${state}`);
+              },
+              contentType: 'application/json; charset=utf-8',
+              dataType: "json"
+            });
           };
 
           document.querySelector(".test-case-container").appendChild(testCaseNode);
@@ -307,10 +370,6 @@
 
       }
     };
-
-    jQuery.post("/test-case", JSON.stringify(testCases[0]), (data) => {
-      console.log("");
-    });
   </script>
 </head>
 <body>
@@ -319,48 +378,47 @@
     <div class="col-md-3 form-container">
       <form>
         <label>User ID</label>
-        <input name="userId" type="text">
+        <input name="userId" type="text" disabled class="form-control">
         <label>Card Number</label>
-        <input name="cardNumber" type="text">
+        <input name="cardNumber" type="text" disabled class="form-control">
         <label>IP</label>
-        <input name="ip" type="text">
+        <input name="ip" type="text" disabled class="form-control">
         <div class="row positionContainer">
           <div class="col-md-6">
             <label>LONG</label>
-            <input name="lat" type="text">
+            <input name="lat" type="text" disabled class="form-control">
           </div>
           <div class="col-md-6">
             <label>LAT</label>
-            <input name="long" type="text">
+            <input name="long" type="text" disabled class="form-control">
           </div>
         </div>
         <div class="addressContainer billingAddress">
           <strong>Billing address</strong>
 
           <label>ZIP</label>
-          <input name="zip" type="text">
+          <input name="zip" type="text" disabled class="form-control">
           <label>Country</label>
-          <input name="country" type="text">
+          <input name="country" type="text" disabled class="form-control">
           <label>City</label>
-          <input name="city" type="text">
+          <input name="city" type="text" disabled class="form-control">
           <label>Street</label>
-          <input name="street" type="text">
+          <input name="street" type="text" disabled class="form-control">
 
 
           <div class="addressContainer shippingAddress">
-            <strong>Billing address</strong>
+            <strong>Shipping address</strong>
 
             <label>ZIP</label>
-            <input name="zip" type="text">
+            <input name="zip" type="text" disabled class="form-control">
             <label>Country</label>
-            <input name="country" type="text">
+            <input name="country" type="text" disabled class="form-control">
             <label>City</label>
-            <input name="city" type="text">
+            <input name="city" type="text" disabled class="form-control">
             <label>Street</label>
-            <input name="street" type="text">
+            <input name="street" type="text" disabled class="form-control">
           </div>
         </div>
-        <button class="btn btn-primary">Submit</button>
       </form>
 
     </div>
