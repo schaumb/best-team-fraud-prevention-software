@@ -1,0 +1,10 @@
+# docker-compose.yml
+version: '2'
+
+services:
+    seon:
+        build: .
+        ports:
+          - 3000:3000
+        volumes:
+          - ./database:/usr/local/app/seon/database
