@@ -159,7 +159,7 @@ export class GeoFraudDetectorService {
     },
     ONE_IP_MULTIPLE_SHIPPING_ADDRESS: async (history, transaction, previousTransactions) => {
       let prevTransactionsFromTheSameIp = previousTransactions.filter(trans => trans.ip == transaction.ip);
-      const DIFFERENT_ADDRESS_COUNTER_TRIGGER = 10
+      const DIFFERENT_ADDRESS_COUNTER_TRIGGER = 2
       let differentAddressCount = prevTransactionsFromTheSameIp.reduce((prev, current) => {
         let pairs = [
           [ current.billingZipCode, transaction.billingAddress.zipCode ],
